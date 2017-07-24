@@ -27,7 +27,7 @@ function expressStaticGzip(rootFolder, options) {
 
     //if at least one compression has been added, lookup files
     if (compressions.length > 0) {
-        compressionHandler.findAllCompressionFiles(rootFolder, compressions);
+        compressionHandler.findAllCompressionFiles(rootFolder, compressions, files);
     }
 
     return function middleware(req, res, next) {

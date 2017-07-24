@@ -31,7 +31,8 @@ function findAvailableCompressionForFile(compressionList, acceptedEncoding) {
  * Picks all files into the matching compression's file list. Search is done recursively!
  * @param {string} folderPath
  */
-function findAllCompressionFiles(folderPath, compressions, files) {
+function findAllCompressionFiles(folderPath, compressions, files, rootPath) {
+    rootPath = rootPath || folderPath;
     var fsFiles = fs.readdirSync(folderPath);
     //iterate all files in the current folder
     for (var i = 0; i < fsFiles.length; i++) {
@@ -39,9 +40,9 @@ function findAllCompressionFiles(folderPath, compressions, files) {
         var stats = fs.statSync(filePath);
         if (stats.isDirectory()) {
             //recursively search folders and append the matching files
-            findAllCompressionFiles(fs, filePath);
+            findAllCompressionFiles(filePath, compressions, files, rootPath);
         } else {
-            addAllMatchingCompressionsToFile(fsFiles[i], filePath, compressions, folderPath, files);
+            addAllMatchingCompressionsToFile(fsFiles[i], filePath, compressions, rootPath, files);
         }
     }
 }
