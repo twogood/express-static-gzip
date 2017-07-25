@@ -17,7 +17,7 @@ describe("express-static-gzip", function () {
         });
     });
 
-    it("should serve a single file", function () {
+    it("should change request for a single file setup", function () {
         middleware = expressStaticGzip(testContentFolder + "/js/main.js");
 
         var resp = test_request("/main.js", { 'accept-encoding': 'gzip' }, (req, res) => {
@@ -36,6 +36,20 @@ describe("express-static-gzip", function () {
             expect(res.headers["content-encoding"]).to.be.undefined;
             expect(res.headers["vary"]).to.be.undefined;
             expect(res.headers["content-type"]).to.be.undefined;
+        });
+    });
+
+    it("should select compression in correct order", function () {
+        middleware = expressStaticGzip(testContentFolder, { enableBrotli: true });
+
+        var resp = test_request("/style.css", { 'accept-encoding': 'gzip, br' }, (req, res) => {
+            expect(req.url).to.equal("/style.css.br");
+            expect(res.headers["content-encoding"]).to.equal("br");
+        });
+
+        var resp = test_request("/style.css", { 'accept-encoding': 'gzip' }, (req, res) => {
+            expect(req.url).to.equal("/style.css.gz");
+            expect(res.headers["content-encoding"]).to.equal("gzip");
         });
     });
 
