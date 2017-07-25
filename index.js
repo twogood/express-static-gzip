@@ -5,6 +5,8 @@ var compressionHandler = require("./src/compression-handler");
 
 module.exports = expressStaticGzip;
 
+var defaultStatic;
+
 /**
  * Generates a middleware function to serve static files. It is build on top of the express.static middleware.
  * It extends the express.static middleware with the capability to serve (previously) gziped files. For this
@@ -17,10 +19,11 @@ function expressStaticGzip(rootFolder, options) {
     options = options || {};
     if (typeof (options.indexFromEmptyFile) === "undefined") options.indexFromEmptyFile = true;
 
-    //create a express.static middleware to handle serving files 
-    var defaultStatic = serveStatic(rootFolder, options),
-        compressions = [],
+    var compressions = [],
         files = {};
+
+    //create a express.static middleware to handle serving files 
+    defaultStatic = serveStatic(rootFolder, options);
 
     //read compressions from options
     setupCompressions();
@@ -50,7 +53,7 @@ function expressStaticGzip(rootFolder, options) {
         }
 
         //allways call the default static file provider
-        defaultStatic(req, res, next);
+        callServeStatic(req, res, next);
     };
 
     /**
@@ -103,3 +106,13 @@ function expressStaticGzip(rootFolder, options) {
         }
     }
 }
+
+function callServeStatic(req, res, next) {
+    if (defaultStatic) {
+        defaultStatic(req, res, next);
+    }
+}
+
+expressStaticGzip.__setServeStatic__testonly = function __setServeStatic__(callback) {
+    defaultStatic = callback;
+};

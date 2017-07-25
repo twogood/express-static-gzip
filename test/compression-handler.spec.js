@@ -1,7 +1,7 @@
-var expect = require("chai").expect;
-var compressionHandler = require("../src/compression-handler");
+const expect = require("chai").expect;
+const compressionHandler = require("../src/compression-handler");
 
-var testContentFolder = "test/static";
+const testContentFolder = "test/static";
 
 describe("compression-handler", function () {
 
