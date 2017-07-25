@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 module.exports = {
+    parseOptionsToCompressionList: parseOptionsToCompressionList,
     findAllCompressionFiles: findAllCompressionFiles,
     findCompressionMatchingEncoding: findCompressionMatchingEncoding,
     addAllMatchingCompressionsToFile: addAllMatchingCompressionsToFile,
@@ -9,6 +10,31 @@ module.exports = {
     registerCompression: registerCompression,
     Compression: Compression,
     findCompressionByName: findCompressionByName
+}
+
+/**
+     * Reads the options into a list of available compressions.
+     */
+function parseOptionsToCompressionList(options) {
+    compressions = [];
+
+    //register all provided compressions
+    if (options.customCompressions && options.customCompressions.length > 0) {
+        for (var i = 0; i < options.customCompressions.length; i++) {
+            var customCompression = options.customCompressions[i];
+            registerCompression(customCompression.encodingName, customCompression.fileExtension, compressions);
+        }
+    }
+
+    //enable brotli compression
+    if (options.enableBrotli) {
+        registerCompression("br", "br", compressions);
+    }
+
+    //gzip compression is enabled by default
+    registerCompression("gzip", "gz", compressions);
+
+    return compressions;
 }
 
 /**
@@ -32,7 +58,9 @@ function findCompressionMatchingEncoding(compressions, acceptedEncoding) {
  * Picks all files into the matching compression's file list. Search is done recursively!
  * @param {string} folderPath
  */
-function findAllCompressionFiles(folderPath, compressions, files) {
+function findAllCompressionFiles(folderPath, compressions) {
+    var files = {};
+
     folderPath = path.resolve(folderPath);
     if (isFolder(folderPath)) {
         findCompressedFilesRecursivly(folderPath, folderPath, compressions, files);
@@ -47,6 +75,8 @@ function findAllCompressionFiles(folderPath, compressions, files) {
             }
         }
     }
+
+    return files;
 }
 
 function findCompressedFilesRecursivly(folderPath, rootPath, compressions, files) {

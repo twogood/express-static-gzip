@@ -16,28 +16,25 @@ describe("compression-handler", function () {
 
     it("should find file in main folder", function () {
         let compressions = [];
-        let files = {};
         compressionHandler.registerCompression("gzip", "gz", compressions);
 
-        compressionHandler.findAllCompressionFiles(testContentFolder, compressions, files);
+        let files = compressionHandler.findAllCompressionFiles(testContentFolder, compressions);
         expect(files["/index.html"]).to.exist;
     });
 
     it("should find file in subfolder", function () {
         let compressions = [];
-        let files = {};
         compressionHandler.registerCompression("gzip", "gz", compressions);
 
-        compressionHandler.findAllCompressionFiles(testContentFolder, compressions, files);
+        let files = compressionHandler.findAllCompressionFiles(testContentFolder, compressions);
         expect(files["/js/main.js"]).to.exist;
     });
 
     it("should detect a single file", function () {
         let compressions = [];
-        let files = {};
         compressionHandler.registerCompression("gzip", "gz", compressions);
 
-        compressionHandler.findAllCompressionFiles(testContentFolder + "/index.html", compressions, files);
+        let files = compressionHandler.findAllCompressionFiles(testContentFolder + "/index.html", compressions);
         expect(files["/index.html"]).to.exist;
     });
 });

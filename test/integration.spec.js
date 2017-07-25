@@ -1,14 +1,16 @@
 const expect = require("chai").expect;
-const expressStaticGzip = require("../index");
+const Middleware = require("../src/middleware");
+const compressionHandler = require("../src/compression-handler");
 
 const testPort = 1337;
 const testContentFolder = "test/static";
 
 describe("express-static-gzip", function () {
     var middleware;
+    var callbackFn;
 
     it("should serve from a folder", function () {
-        middleware = expressStaticGzip(testContentFolder);
+        setupMiddleware(testContentFolder, {});
 
         var resp = test_request("/index.html", { 'accept-encoding': 'gzip' }, (req, res) => {
             expect(req.url).to.equal("/index.html.gz");
@@ -18,7 +20,7 @@ describe("express-static-gzip", function () {
     });
 
     it("should change request for a single file setup", function () {
-        middleware = expressStaticGzip(testContentFolder + "/js/main.js");
+        setupMiddleware(testContentFolder + "/js/main.js", {});
 
         var resp = test_request("/main.js", { 'accept-encoding': 'gzip' }, (req, res) => {
             expect(req.url).to.equal("/main.js.gz");
@@ -29,7 +31,7 @@ describe("express-static-gzip", function () {
     });
 
     it("should not change requests for other files than the one specified", function () {
-        middleware = expressStaticGzip(testContentFolder + "/index.html");
+        setupMiddleware(testContentFolder + "/index.html", {});
 
         var resp = test_request("/js/main.js", { 'accept-encoding': 'gzip' }, (req, res) => {
             expect(req.url).to.equal("/js/main.js");
@@ -40,7 +42,7 @@ describe("express-static-gzip", function () {
     });
 
     it("should select compression in correct order", function () {
-        middleware = expressStaticGzip(testContentFolder, { enableBrotli: true });
+        setupMiddleware(testContentFolder, { enableBrotli: true });
 
         var resp = test_request("/style.css", { 'accept-encoding': 'gzip, br' }, (req, res) => {
             expect(req.url).to.equal("/style.css.br");
@@ -53,10 +55,28 @@ describe("express-static-gzip", function () {
         });
     });
 
-    function test_request(path, headers, callback) {
-        var resp = new MockedResponse();
-        expressStaticGzip.__setServeStatic__testonly(callback);
-        middleware(new MockedRequest(path, headers), resp);
+    function test_request(path, headers, cb) {
+        callbackFn = cb;
+        middleware(
+            new MockedRequest(path, headers),
+            new MockedResponse(),
+            () => { }
+        );
+    }
+
+    function setupMiddleware(folder, options) {
+        let compressions = compressionHandler.parseOptionsToCompressionList(options);
+        let files = compressionHandler.findAllCompressionFiles(folder, compressions);
+
+        middleware = Middleware.create(
+            (req, res, next) => {
+                if (callbackFn) {
+                    callbackFn(req, res, next);
+                }
+            },
+            files,
+            options
+        );
     }
 
     function MockedRequest(path, headers) {
