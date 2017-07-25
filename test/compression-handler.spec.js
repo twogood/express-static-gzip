@@ -1,10 +1,9 @@
 var expect = require("chai").expect;
-var expressStaticGzip = require("../index");
 var compressionHandler = require("../src/compression-handler");
 
-var contentFolder = "test/static";
+var testContentFolder = "test/static";
 
-describe("express-static-gzip", function () {
+describe("compression-handler", function () {
 
     it("should register gzip compression", function () {
         let compressions = [];
@@ -15,13 +14,21 @@ describe("express-static-gzip", function () {
         expect(compressions[0].fileExtension).to.equal(".gz");
     });
 
-    it("should find gziped file in folder", function () {
+    it("should find file in main folder", function () {
         let compressions = [];
         let files = {};
         compressionHandler.registerCompression("gzip", "gz", compressions);
 
-        compressionHandler.findAllCompressionFiles(contentFolder, compressions, files);
+        compressionHandler.findAllCompressionFiles(testContentFolder, compressions, files);
         expect(files["/index.html"]).to.exist;
+    });
+
+    it("should find file in subfolder", function () {
+        let compressions = [];
+        let files = {};
+        compressionHandler.registerCompression("gzip", "gz", compressions);
+
+        compressionHandler.findAllCompressionFiles(testContentFolder, compressions, files);
         expect(files["/js/main.js"]).to.exist;
     });
 
@@ -30,7 +37,7 @@ describe("express-static-gzip", function () {
         let files = {};
         compressionHandler.registerCompression("gzip", "gz", compressions);
 
-        compressionHandler.findAllCompressionFiles(contentFolder + "/index.html", compressions, files);
+        compressionHandler.findAllCompressionFiles(testContentFolder + "/index.html", compressions, files);
         expect(files["/index.html"]).to.exist;
     });
 });

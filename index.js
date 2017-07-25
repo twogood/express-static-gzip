@@ -43,7 +43,7 @@ function expressStaticGzip(rootFolder, options) {
             res.setHeader("Vary", "Accept-Encoding");
 
             //use the first matching compression to serve a compresed file
-            var compression = compressionHandler.findAvailableCompressionForFile(matchedFile.compressions, acceptEncoding);
+            var compression = compressionHandler.findCompressionMatchingEncoding(matchedFile.compressions, acceptEncoding);
             if (compression) {
                 convertToCompressedRequest(req, res, compression);
             }

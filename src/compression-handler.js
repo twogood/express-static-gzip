@@ -1,8 +1,9 @@
-var fs = require("fs");
+const fs = require("fs");
+const path = require("path");
 
 module.exports = {
     findAllCompressionFiles: findAllCompressionFiles,
-    findAvailableCompressionForFile: findAvailableCompressionForFile,
+    findCompressionMatchingEncoding: findCompressionMatchingEncoding,
     addAllMatchingCompressionsToFile: addAllMatchingCompressionsToFile,
     addCompressionToFile: addCompressionToFile,
     registerCompression: registerCompression,
@@ -11,16 +12,16 @@ module.exports = {
 }
 
 /**
- * Searches for the first matching compression available from the given compressions.
- * @param {[Compression]} compressionList
+ * Searches for the first matching compression available from the given compression list.
+ * @param {[Compression]} compressions
  * @param {string} acceptedEncoding
  * @returns
  */
-function findAvailableCompressionForFile(compressionList, acceptedEncoding) {
+function findCompressionMatchingEncoding(compressions, acceptedEncoding) {
     if (acceptedEncoding) {
-        for (var i = 0; i < compressionList.length; i++) {
-            if (acceptedEncoding.indexOf(compressionList[i].encodingName) >= 0) {
-                return compressionList[i];
+        for (var i = 0; i < compressions.length; i++) {
+            if (acceptedEncoding.indexOf(compressions[i].encodingName) >= 0) {
+                return compressions[i];
             }
         }
     }
@@ -31,18 +32,33 @@ function findAvailableCompressionForFile(compressionList, acceptedEncoding) {
  * Picks all files into the matching compression's file list. Search is done recursively!
  * @param {string} folderPath
  */
-function findAllCompressionFiles(folderPath, compressions, files, rootPath) {
-    rootPath = rootPath || folderPath;
+function findAllCompressionFiles(folderPath, compressions, files) {
+    folderPath = path.resolve(folderPath);
+    if (isFolder(folderPath)) {
+        findCompressedFilesRecursivly(folderPath, folderPath, compressions, files);
+    } else {
+        var parentFolder = path.dirname(folderPath);
+        var fileName = path.basename(folderPath);
+        var fileList = fs.readdirSync(parentFolder);
+        for (var i = 0; i < fileList.length; i++) {
+            if (fileList[i].indexOf(fileName) === 0) {
+                var filePath = path.resolve(parentFolder, fileList[i]);
+                addAllMatchingCompressionsToFile("/" + fileList[i], compressions, files);
+            }
+        }
+    }
+}
+
+function findCompressedFilesRecursivly(folderPath, rootPath, compressions, files) {
     var fsFiles = fs.readdirSync(folderPath);
     //iterate all files in the current folder
     for (var i = 0; i < fsFiles.length; i++) {
-        var filePath = folderPath + "/" + fsFiles[i];
-        var stats = fs.statSync(filePath);
-        if (stats.isDirectory()) {
+        var filePath = path.resolve(folderPath, fsFiles[i]);
+        if (isFolder(filePath)) {
             //recursively search folders and append the matching files
-            findAllCompressionFiles(filePath, compressions, files, rootPath);
+            findCompressedFilesRecursivly(filePath, rootPath, compressions, files);
         } else {
-            addAllMatchingCompressionsToFile(fsFiles[i], filePath, compressions, rootPath, files);
+            addAllMatchingCompressionsToFile(filePath.replace(rootPath, ''), compressions, files);
         }
     }
 }
@@ -53,10 +69,10 @@ function findAllCompressionFiles(folderPath, compressions, files, rootPath) {
  * @param {string} fileName
  * @param {string} fillFilePath
  */
-function addAllMatchingCompressionsToFile(fileName, fullFilePath, compressions, rootFolder, files) {
+function addAllMatchingCompressionsToFile(fileName, compressions, files) {
     for (var i = 0; i < compressions.length; i++) {
         if (fileName.endsWith(compressions[i].fileExtension)) {
-            addCompressionToFile(fullFilePath, compressions[i], rootFolder, files);
+            addCompressionToFile(fileName, compressions[i], files);
             return;
         }
     }
@@ -64,14 +80,14 @@ function addAllMatchingCompressionsToFile(fileName, fullFilePath, compressions, 
 
 /**
  * Adds the compression to the file's list of available compressions
- * @param {string} filePath
+ * @param {string} fileName
  * @param {Compression} compression
  */
-function addCompressionToFile(filePath, compression, rootFolder, files) {
-    var srcFilePath = filePath.replace(compression.fileExtension, "").replace(rootFolder, "");
-    var existingFile = files[srcFilePath];
+function addCompressionToFile(fileName, compression, files) {
+    var fileName = fileName.replace(compression.fileExtension, "");
+    var existingFile = files[fileName];
     if (!existingFile) {
-        files[srcFilePath] = { compressions: [compression] };
+        files[fileName] = { compressions: [compression] };
     } else {
         existingFile.compressions.push(compression);
     }
@@ -109,4 +125,14 @@ function findCompressionByName(encodingName, compressions) {
             return compressions[i];
     }
     return null;
+}
+
+/**
+ * Tests if path points to a folder
+ * @param {string} filePath
+ * @returns 
+ */
+function isFolder(filePath) {
+    var stats = fs.statSync(filePath);
+    return stats && stats.isDirectory();
 }
