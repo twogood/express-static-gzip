@@ -1,1 +1,13 @@
-55555555
+p {
+    font-size: 20px;
+    padding: 10px 20px;
+    cursor: default;
+    -webkit-transition: padding-left 400ms ease;
+    -moz-transition: padding-left 400ms ease;
+    -o-transition: padding-left 400ms ease;
+    -ms-transition: padding-left 400ms ease;
+}
+
+p:hover {
+    padding-left: 40px;
+}
