@@ -16,7 +16,7 @@
     "url": "https://github.com/tkoenig89/express-static-gzip"
   },
   "scripts": {
-    "test": "mocha test"
+    "test": "mocha test/*.spec.js"
   },
   "license": "MIT",
   "dependencies": {

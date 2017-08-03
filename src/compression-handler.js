@@ -65,15 +65,8 @@ function findAllCompressionFiles(folderPath, compressions) {
     if (isFolder(folderPath)) {
         findCompressedFilesRecursivly(folderPath, folderPath, compressions, files);
     } else {
-        var parentFolder = path.dirname(folderPath);
-        var fileName = path.basename(folderPath);
-        var fileList = fs.readdirSync(parentFolder);
-        for (var i = 0; i < fileList.length; i++) {
-            if (fileList[i].indexOf(fileName) === 0) {
-                var filePath = path.resolve(parentFolder, fileList[i]);
-                addAllMatchingCompressionsToFile("/" + fileList[i], compressions, files);
-            }
-        }
+        //NOT SUPPORTED AT THE MOMENT
+        throw Error("supplied path is not a folder");
     }
 
     return files;

@@ -9,35 +9,13 @@ describe("express-static-gzip", function () {
     var middleware;
     var callbackFn;
 
-    it("should serve from a folder", function () {
+    it("should change request for files from the folder", function () {
         setupMiddleware(testContentFolder, {});
 
         var resp = test_request("/index.html", { 'accept-encoding': 'gzip' }, (req, res) => {
             expect(req.url).to.equal("/index.html.gz");
             expect(res.headers["content-encoding"]).to.equal("gzip");
             expect(res.headers["content-type"]).to.equal("text/html; charset=UTF-8");
-        });
-    });
-
-    it("should change request for a single file setup", function () {
-        setupMiddleware(testContentFolder + "/js/main.js", {});
-
-        var resp = test_request("/main.js", { 'accept-encoding': 'gzip' }, (req, res) => {
-            expect(req.url).to.equal("/main.js.gz");
-            expect(res.headers["content-encoding"]).to.equal("gzip");
-            expect(res.headers["vary"]).to.equal("Accept-Encoding");
-            expect(res.headers["content-type"]).to.equal("application/javascript; charset=UTF-8");
-        });
-    });
-
-    it("should not change requests for other files than the one specified", function () {
-        setupMiddleware(testContentFolder + "/index.html", {});
-
-        var resp = test_request("/js/main.js", { 'accept-encoding': 'gzip' }, (req, res) => {
-            expect(req.url).to.equal("/js/main.js");
-            expect(res.headers["content-encoding"]).to.be.undefined;
-            expect(res.headers["vary"]).to.be.undefined;
-            expect(res.headers["content-type"]).to.be.undefined;
         });
     });
 
